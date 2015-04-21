@@ -1,6 +1,7 @@
 ﻿/** Gruntfile for [ludorum-tactics.js](http://github.com/LeonardoVal/ludorum-tactics.js).
 */
 var sourceFiles = [ 'src/__prologue__.js',
+	'src/TacticsPiece.js',
 	'src/TacticsGame.js',
 // end
 	'src/__epilogue__.js'];
