@@ -33,14 +33,13 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	   position xxyy 
 	   view distance
 	*/
-	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position,viewDistance){
+	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position){
 		this.position=position;
 		this.hp=hp;
 		this.hitChance=hitChance;
 		this.saveChance=saveChance;
 		this.attackRange=attackRange;
 		this.movement=movement;
-		this.viewDistance=viewDistance;
 
 	},
 
@@ -53,16 +52,16 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 
 
 /** NO TESTING MADE 
-	If a piece if next to me its visible and you should consider terrain. 
-	Calculates if a piece is in line of sight, considering the terrain and type of terrain. 
+	If a 'piece' if next to me its visible and you should consider terrain. 
+	Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain. 
 	variable:
-	noViewTerrains(  
-	a string representing all the terrains that cut view example x:mountain, y:fog then 
+	'game.noViewTerrains' a string representing all the terrains that cut view example x:mountain, y:fog then 
 	noviewTerrains= 'xy')
+	
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
-	pieceinLineOfSightbline: function pieceinLineOfSightbline(game,piece,noViewTerrains){
+	pieceinLineOfSightbline: function pieceinLineOfSightbline(game,piece){
 		//FIXME
  		x0= this.position[0];
  		y0= this.position[1];
@@ -77,20 +76,21 @@ var TacticsPiece  = exports.TacticsPiece= declare({
   		sy = y0 < y1 ? 1 : -1; 
   		err = (dx>dy ? dx : -dy)/2;
 		  while (true) {
-		  	if (noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
+		  	if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
 		    if (x0 === x1 && y0 === y1) break;
 		     e2 = err;
 		    if (e2 > -dx) { err -= dy; x0 += sx; }
 		    if (e2 < dy) { err += dx; y0 += sy; }
 		  }
+		  
 		return true;  
 	},
-/** Calculates if a piece is in line of sight, considering the terrain and type of terrain. 
+/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game'. 
 */
 	pieceInLineOfSight: function pieceInLineOfSight(game,piece){
 		
 	},
-/** Calculates if a position is in line of sight 
+/** Calculates if a 'position' is in line of sight 
 */
 	 inLineOfSight: function inLineofSight(game,position){
 		
@@ -102,12 +102,15 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		
 	},
 
-/** Calculates damage to enemy piece considering hit chance. 
+/** Calculates damage to enemy 'piece' considering hit chance. 
 */
 	attack: function attack(game,piece){
 		
 	},
 
+
+/** Calculates 'damage' recibed considering 'savechance' considering hit chance. 
+*/
 	suffer: function suffer(damage){
 
 	}
@@ -120,6 +123,7 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 var TacticsGame = exports.TacticsGame = declare(Game, {
 	players : ['Left', 'Right'],
 	name : 'TacticsGame',
+	noViewTerrains:'xo#',
 
 	
 
@@ -151,7 +155,11 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	}, 
 	result : function result(){
 		//ToDo
+	},
+	generateThreatMap: function generateThreatMap(){
+		//ToDo
 	}
+
 
 
 }); // declare TacticsGame
