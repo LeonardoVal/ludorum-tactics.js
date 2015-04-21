@@ -1,0 +1,62 @@
+Heuristic : 
+
+Hp in combat is given by
+defender.hp -= attacker.hp * attacker.hitChance * (1 - defender.saveChance);
+hp<0.5 = death
+
+
+I should try to kill pieces 
+Each state is given by :
+-Movement. 
++Atacks made and won.
+-Being in atackrange
+-Line of sight reduced
+-Line of sight reduced to my piece positions
+-Atacks negated by my own pieces.
+
+I should try to : 
+Cluster my pieces with out loosing atack posiblitty
+
+
+-----------Atacks-----------
+I should try to maximize this value. this valueis given by HP in combat.
+The atacks should put myself in a position where:
+
+--POSIBLE DAMAGE
+Damage recibed is lower than the posible damage recibed in next round, 
+this is giben by (being in atackrange of x unit)
+
+--OVERHAUL DAMAGE
+makes the overhaul damage of the enemy lower than mine.
+SUM(of damages of pieces in line of sight)
+
+--OVERHAUL HP 
+makes the overhaul hp of the enemy lower than mine, considering posible damage. 
+
+
+-----------MOVEMENT-----------
+I should consider when moving 
+---Being in atackrange
+I should try to avoid getting in atackrange
+
+---Line of sight reduced to my piece positions
+I should avoid positions where the line of sight of my units is reduced
+
+---Line of sight reduced to my piece positions
+I should try to position myself in positions where the enemy line of sight is reduced
+if they move to my position
+
+---Atacks negated by my own pieces.
+I should avoid positions where my atack is reduced by my pieces 
+For example 
+Archer: distance 3 
+Warrior distance 1
+Archer in position(0,0)
+Warrior in position(0,1)
+Warrior in position(0,2)
+Warrior in position(0,3)
+That means i have posible atacks in the x+ direction
+
+
+Both heuristics should coexist by constants
+Each part of Movement and Atacks should also be regulated by constants 
