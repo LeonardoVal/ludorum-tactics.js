@@ -31,12 +31,12 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 
 
 /** NO TESTING MADE 
-	If a piece if next to me its visible and you should consider terrain. 
-	Calculates if a piece is in line of sight, considering the terrain and type of terrain. 
+	If a 'piece' if next to me its visible and you should consider terrain. 
+	Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain. 
 	variable:
-	noViewTerrains(  
-	a string representing all the terrains that cut view example x:mountain, y:fog then 
+	'noViewTerrains' a string representing all the terrains that cut view example x:mountain, y:fog then 
 	noviewTerrains= 'xy')
+	
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
@@ -63,12 +63,12 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		  }
 		return true;  
 	},
-/** Calculates if a piece is in line of sight, considering the terrain and type of terrain. 
+/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game'. 
 */
 	pieceInLineOfSight: function pieceInLineOfSight(game,piece){
 		
 	},
-/** Calculates if a position is in line of sight 
+/** Calculates if a 'position' is in line of sight 
 */
 	 inLineOfSight: function inLineofSight(game,position){
 		
@@ -80,12 +80,15 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		
 	},
 
-/** Calculates damage to enemy piece considering hit chance. 
+/** Calculates damage to enemy 'piece' considering hit chance. 
 */
 	attack: function attack(game,piece){
 		
 	},
 
+
+/** Calculates 'damage' recibed considering 'savechance' considering hit chance. 
+*/
 	suffer: function suffer(damage){
 
 	}

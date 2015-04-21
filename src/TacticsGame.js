@@ -35,7 +35,11 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	}, 
 	result : function result(){
 		//ToDo
+	},
+	generateThreatMap: function generateThreatMap(){
+		//ToDo
 	}
+
 
 
 }); // declare TacticsGame
