@@ -11,17 +11,19 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	   position xxyy 
 	   
 	*/
-	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position){
+	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position,owner){
 		this.position=position;
 		this.hp=hp;
+		this.damageRecibed=0;
 		this.hitChance=hitChance;
 		this.saveChance=saveChance;
 		this.attackRange=attackRange;
 		this.movement=movement;
-
+		this.owner=owner;
 	},
 
 /** Movement of the piece considering the terrain and other pieces that info is passed through game
+	cant walk over my pieces
 */
 	moves: function moves (game){
 		
@@ -41,22 +43,22 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 */
 	pieceinLineOfSightbline: function pieceinLineOfSightbline(game,piece){
 		//FIXME
- 		x0= this.position[0];
- 		y0= this.position[1];
- 		x1= piece.position[0];
- 		y1= piece.position[1];
- 		dx = Math.abs(x1 - x0);
- 		sx = x0 < x1 ? 1 : -1;
-  		dy = Math.abs(y1 - y0);
+ 		var x0= this.position[0];
+ 		var y0= this.position[1];
+ 		var x1= piece.position[0];
+ 		var y1= piece.position[1];
+ 		var dx = Math.abs(x1 - x0);
+ 		var sx = x0 < x1 ? 1 : -1;
+  		var dy = Math.abs(y1 - y0);
   		if (dx <=1 && dy<=1 ){
   			return true;
   		}
-  		sy = y0 < y1 ? 1 : -1; 
-  		err = (dx>dy ? dx : -dy)/2;
+  		var sy = y0 < y1 ? 1 : -1; 
+  		var err = (dx>dy ? dx : -dy)/2;
 		  while (true) {
 		  	if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
 		    if (x0 === x1 && y0 === y1) break;
-		     e2 = err;
+		    	var  e2 = err;
 		    if (e2 > -dx) { err -= dy; x0 += sx; }
 		    if (e2 < dy) { err += dx; y0 += sy; }
 		  }
@@ -64,7 +66,7 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		return true;  
 	},
 /** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game',
-	'methodCode' type of function used to trace distance
+	'methodCode' type of function used to trace distance for bline : 'bline'
 */
 	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
 		switch(expression) {
@@ -76,10 +78,12 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 }
 		
 	},
-/** Calculates if a 'position' is in line of sight
-	'methodCode' type of function used to trace distance
+/** Calculates if a 'position' [x0,y0] is in line of sight 
+	'methodCode' type of function used to trace distance for bline : 'bline'
 */
 	 inLineOfSight: function inLineofSight(game,position,methodCode){
+	 	xpiece;
+	 	xpiece.position=position;
 		switch(expression) {
 	    	case 'bline':
 	        	return pieceinLineOfSightbline(game,position);
@@ -88,16 +92,29 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	        	default return pieceinLineOfSightbline(game,position);
 	},
 
-/** piece must be inLineofSight
+/** piece must be inLineofSight NO TIENE SENTIDO?
 */
 	possibleAttacks: function possibleAttacks(game){
-		
+		function pad2(piec) {
+        	return Math.sqrt(Math.pow(this.position[0]=piec.position[0],2)+
+        		      Math.pow(this.position[1]=piec.position[1],2));
+    	}
+    	xpieces=[];
+		for(piece in game.pieces){
+			if (piece.owner!=this.owner && piece.){
+					if(pad2(piece)<=this.attackRange){
+
+					}
+				}
+			}
+
+		}
 	},
 
 /** Calculates damage to enemy 'piece' considering hit chance. 
 */
 	attack: function attack(game,piece){
-		
+
 	},
 
 
