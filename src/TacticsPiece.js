@@ -9,7 +9,7 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	   attackRange 0-3
 	   movementSpeed 0-5
 	   position xxyy 
-	   view distance
+	   
 	*/
 	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position){
 		this.position=position;
@@ -63,15 +63,29 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		  
 		return true;  
 	},
-/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game'. 
+/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game',
+	'methodCode' type of function used to trace distance
 */
-	pieceInLineOfSight: function pieceInLineOfSight(game,piece){
+	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
+		switch(expression) {
+	    	case 'bline':
+	        	return pieceinLineOfSightbline(game,piece);
+	        break;
+	    	default:
+	        	default return pieceinLineOfSightbline(game,piece);
+}
 		
 	},
-/** Calculates if a 'position' is in line of sight 
+/** Calculates if a 'position' is in line of sight
+	'methodCode' type of function used to trace distance
 */
-	 inLineOfSight: function inLineofSight(game,position){
-		
+	 inLineOfSight: function inLineofSight(game,position,methodCode){
+		switch(expression) {
+	    	case 'bline':
+	        	return pieceinLineOfSightbline(game,position);
+	        break;
+	    	default:
+	        	default return pieceinLineOfSightbline(game,position);
 	},
 
 /** piece must be inLineofSight
