@@ -27,7 +27,7 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 /**
 	Clone method
 */
-function clone(){
+clone: function clone(){
 	var xclone=new TacticsPiece();
 		xclone.position=this.position;
 		xclone.hp=this.hp;
@@ -39,7 +39,7 @@ function clone(){
 		xclone.owner=this.owner;
 	return xclone;
 
-}
+},
 
 
 /** Movement of the piece considering the terrain and other pieces that info is passed through game
@@ -62,7 +62,7 @@ function clone(){
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
-	pieceinLineOfSightbline: function BresenhamLineAlgorithm(game,piece){
+	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game,piece){
 		//FIXME should i use this to calculate posibleatacks instead euclidean distance
  		var x0= this.position[0];
  		var y0= this.position[1];
@@ -92,38 +92,34 @@ function clone(){
 	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
 		switch(expression) {
 	    	case 'bline':
-	        	return BresenhamLineAlgorithm(game,piece);
-	        break;
+	        	return v=(this.BresenhamLineAlgorithm(game,piece));
 	    	default:
-	        	default return BresenhamLineAlgorithm(game,piece);
-}
-		
+	        	 return v=(this.BresenhamLineAlgorithm(game,piece));
+		}				
 	},
 /** Calculates if a 'position' [x0,y0] is in line of sight 
 	'methodCode' type of function used to trace distance for bline : 'bline'
 */
 	 inLineOfSight: function inLineofSight(game,position,methodCode){
 	 	var xpiece=new TacticsPiece();
-	 	var xpiece.position= position;
+	 	xpiece.position= position;
 		switch(expression) {
 	    	case 'bline':
-	        	return BresenhamLineAlgorithm(game,position);
-	        break;
+	        	return v= (this.BresenhamLineAlgorithm(game,position));
 	    	default:
-	        	default return BresenhamLineAlgorithm(game,position);
+	        	return v=(this.BresenhamLineAlgorithm(game,position));
+	        }
 	},
-
 /** piece must be inLineofSight NO TIENE SENTIDO?
 */
 	possibleAttacks: function possibleAttacks(game){
-		function euqDist(piec) {
-        	return Math.sqrt(Math.pow(this.position[0]=piec.position[0],2)+
-        		      Math.pow(this.position[1]=piec.position[1],2));
-    	}
+		
+
     	var xpieces=[];
-		for(piece in game.pieces){
+		for( var piece in game.pieces){
 			if (piece.owner!=this.owner && piece.hp>piece.damageRecibed && pieceInLineOfSight(game,piece,'bline')){
-					if(euqDist(piece)<=this.attackRange){
+        			euqDist= Math.sqrt(Math.pow(this.position[0]-piec.position[0],2)+Math.pow(this.position[1]-piec.position[1],2));
+					if(euqDist<=this.attackRange){
 						xpieces[xpieces.length+1]=piece;
 					}
 			}
@@ -146,3 +142,4 @@ function clone(){
 		this.damage += damage*(1-saveChance);
 	}
 }); // declare TacticsPiece
+
