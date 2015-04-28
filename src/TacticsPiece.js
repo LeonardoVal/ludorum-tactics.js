@@ -15,15 +15,36 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 		this.position=position;
 		this.hp=hp;
 		this.damageRecibed=0;
+
 		this.hitChance=hitChance;
 		this.saveChance=saveChance;
+
 		this.attackRange=attackRange;
 		this.movement=movement;
 		this.owner=owner;
 	},
 
+/**
+	Clone method
+*/
+function clone(){
+	var xclone=new TacticsPiece();
+		xclone.position=this.position;
+		xclone.hp=this.hp;
+		xclone.damageRecibed=this.damageRecibed;
+		xclone.hitChance=this.hitChance;
+		xclone.saveChance=this.saveChance;
+		xclone.attackRange=this.attackRange;
+		xclone.movement=this.movement;
+		xclone.owner=this.owner;
+	return xclone;
+
+}
+
+
 /** Movement of the piece considering the terrain and other pieces that info is passed through game
 	cant walk over my pieces
+	return list of moves ([x,y],...,[xn,yn])
 */
 	moves: function moves (game){
 		
@@ -41,8 +62,8 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
-	pieceinLineOfSightbline: function pieceinLineOfSightbline(game,piece){
-		//FIXME
+	pieceinLineOfSightbline: function BresenhamLineAlgorithm(game,piece){
+		//FIXME should i use this to calculate posibleatacks instead euclidean distance
  		var x0= this.position[0];
  		var y0= this.position[1];
  		var x1= piece.position[0];
@@ -71,10 +92,10 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
 		switch(expression) {
 	    	case 'bline':
-	        	return pieceinLineOfSightbline(game,piece);
+	        	return BresenhamLineAlgorithm(game,piece);
 	        break;
 	    	default:
-	        	default return pieceinLineOfSightbline(game,piece);
+	        	default return BresenhamLineAlgorithm(game,piece);
 }
 		
 	},
@@ -82,45 +103,46 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	'methodCode' type of function used to trace distance for bline : 'bline'
 */
 	 inLineOfSight: function inLineofSight(game,position,methodCode){
-	 	xpiece;
-	 	xpiece.position=position;
+	 	var xpiece=new TacticsPiece();
+	 	var xpiece.position= position;
 		switch(expression) {
 	    	case 'bline':
-	        	return pieceinLineOfSightbline(game,position);
+	        	return BresenhamLineAlgorithm(game,position);
 	        break;
 	    	default:
-	        	default return pieceinLineOfSightbline(game,position);
+	        	default return BresenhamLineAlgorithm(game,position);
 	},
 
 /** piece must be inLineofSight NO TIENE SENTIDO?
 */
 	possibleAttacks: function possibleAttacks(game){
-		function pad2(piec) {
+		function euqDist(piec) {
         	return Math.sqrt(Math.pow(this.position[0]=piec.position[0],2)+
         		      Math.pow(this.position[1]=piec.position[1],2));
     	}
-    	xpieces=[];
+    	var xpieces=[];
 		for(piece in game.pieces){
-			if (piece.owner!=this.owner && piece.){
-					if(pad2(piece)<=this.attackRange){
-
+			if (piece.owner!=this.owner && piece.hp>piece.damageRecibed && pieceInLineOfSight(game,piece,'bline')){
+					if(euqDist(piece)<=this.attackRange){
+						xpieces[xpieces.length+1]=piece;
 					}
-				}
 			}
-
 		}
+		return xpieces;
 	},
 
 /** Calculates damage to enemy 'piece' considering hit chance. 
+	Once its established that you can atack this piece
 */
-	attack: function attack(game,piece){
-
+	attack: function attack(piece){
+		piece.suffer(hitChance);
 	},
 
 
 /** Calculates 'damage' recibed considering 'savechance' considering hit chance. 
+
 */
 	suffer: function suffer(damage){
-
+		this.damage += damage*(1-saveChance);
 	}
 }); // declare TacticsPiece
