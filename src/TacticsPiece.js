@@ -49,7 +49,7 @@ clone: function clone(){
 	Calculo paso n+1 de lista next 
 	Guardo paso n+1 en listareturn y en lista next
 	repito hasta que movimientos =0
-
+	Matrix for movements, 
 
 	return list of moves ([x,y],...,[xn,yn])
 */
@@ -59,20 +59,28 @@ clone: function clone(){
 			var y0=position[1];
 			if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
 			else{return true}
-    	}
-    	for (var direction in [0,1,2,3]){
-    		for (var move=0   :move<=this.movementSpeed :move++){
-	    		switch(direction) {
-			    	case 0:
-			    		break;
-			    	case 1:
-			    		break;
-			    	case 2:
-			    		break;
-			    	case 3:
-			    		break;
-		        }
-		    }
+    	},
+		function mPos(position){
+			var x0=position[0]+this.movementSpeed;
+			var y0=position[1]-this.movementSpeed;
+			return  [xo,yo];
+    	},
+    	var movementMatrix[mPos(this.position)]=this.position;
+    	var listNext=[this.position];
+    	//for(var i=0; j=months.length,i<j; i++){
+
+    	for (var ms=1;ms<this.movementSpeed;ms++){
+    		var listToDo=[];
+    		for(var xpos in listNext){	    		
+	    		var up=[xpos[0],xpos[1]+1];
+	    		var le=[xpos[0]-1,xpos[1]];
+	    		var ri=[xpos[0]+1,xpos[1]];
+	    		var dw=[xpos[0],xpos[1]-1];
+	    		for (var val in [up,le,ri,dw]){
+	    			if 
+
+	    		}
+    		}
 		}		
 
     	
