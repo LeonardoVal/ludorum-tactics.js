@@ -44,10 +44,41 @@ clone: function clone(){
 
 /** Movement of the piece considering the terrain and other pieces that info is passed through game
 	cant walk over my pieces
+	Calculo paso n 
+	Guardo paso n. en listareturn y en lista next
+	Calculo paso n+1 de lista next 
+	Guardo paso n+1 en listareturn y en lista next
+	repito hasta que movimientos =0
+
+
 	return list of moves ([x,y],...,[xn,yn])
 */
 	moves: function moves (game){
-		
+		function canImoveThere(position){
+			var x0=position[0];
+			var y0=position[1];
+			if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
+			else{return true}
+    	}
+    	for (var direction in [0,1,2,3]){
+    		for (var move=0   :move<=this.movementSpeed :move++){
+	    		switch(direction) {
+			    	case 0:
+			    		break;
+			    	case 1:
+			    		break;
+			    	case 2:
+			    		break;
+			    	case 3:
+			    		break;
+		        }
+		    }
+		}		
+
+    	
+    	var x0=position[0];
+		var y0=position[1];
+
 	},
 
 
