@@ -66,7 +66,7 @@ clone: function clone(){
 			return  [xo,yo];
     	},
     	var movementMatrix[mPos(this.position)]=this.position;
-    	var listNext=[this.position];
+    	var listMoves=[this.position];
     	//for(var i=0; j=months.length,i<j; i++){
 
     	for (var ms=1;ms<this.movementSpeed;ms++){
@@ -77,8 +77,11 @@ clone: function clone(){
 	    		var ri=[xpos[0]+1,xpos[1]];
 	    		var dw=[xpos[0],xpos[1]-1];
 	    		for (var val in [up,le,ri,dw]){
-	    			if 
-
+	    			listToDo[listToDo.length]=val;
+	    			if (movementMatrix[mPos(val)]== null){
+	    				movementMatrix[mPos(val)]=1;
+	    				listMoves[listMoves.length]=val;
+	    			}
 	    		}
     		}
 		}		
