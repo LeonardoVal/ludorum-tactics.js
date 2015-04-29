@@ -87,8 +87,7 @@ clone: function clone(){
 		}		
 
     	
-    	var x0=position[0];
-		var y0=position[1];
+    	return listMoves;
 
 	},
 
