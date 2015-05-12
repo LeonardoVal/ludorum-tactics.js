@@ -14,7 +14,7 @@ var TacticsPiece  = exports.TacticsPiece= declare({
 	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position,owner){
 		this.position=position;
 		this.hp=hp;
-		this.damageRecibed=0;
+		this.damageReceived=0;
 
 		this.hitChance=hitChance;
 		this.saveChance=saveChance;
@@ -31,7 +31,7 @@ clone: function clone(){
 	var xclone=new TacticsPiece();
 		xclone.position=this.position;
 		xclone.hp=this.hp;
-		xclone.damageRecibed=this.damageRecibed;
+		xclone.damageReceived=this.damageReceived;
 		xclone.hitChance=this.hitChance;
 		xclone.saveChance=this.saveChance;
 		xclone.attackRange=this.attackRange;
@@ -53,42 +53,26 @@ clone: function clone(){
 
 	return list of moves ([x,y],...,[xn,yn])
 */
-	moves: function moves (game){
-		function canImoveThere(position){
-			var x0=position[0];
-			var y0=position[1];
-			if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
-			else{return true}
-    	},
-		function mPos(position){
-			var x0=position[0]+this.movementSpeed;
-			var y0=position[1]-this.movementSpeed;
-			return  [xo,yo];
-    	},
-    	var movementMatrix[mPos(this.position)]=this.position;
-    	var listMoves=[this.position];
-    	//for(var i=0; j=months.length,i<j; i++){
-
-    	for (var ms=1;ms<this.movementSpeed;ms++){
-    		var listToDo=[];
-    		for(var xpos in listNext){	    		
-	    		var up=[xpos[0],xpos[1]+1];
-	    		var le=[xpos[0]-1,xpos[1]];
-	    		var ri=[xpos[0]+1,xpos[1]];
-	    		var dw=[xpos[0],xpos[1]-1];
-	    		for (var val in [up,le,ri,dw]){
-	    			listToDo[listToDo.length]=val;
-	    			if (movementMatrix[mPos(val)]== null){
-	    				movementMatrix[mPos(val)]=1;
-	    				listMoves[listMoves.length]=val;
-	    			}
-	    		}
-    		}
-		}		
-
-    	
-    	return listMoves;
-
+	moves: function moves(game){
+    	var visited={};
+    	var listToDo=[this.position];
+    	for (var ms = 0; ms <= this.movementSpeed; ms++){	
+    		listToDo.forEach(function (xpos) {	
+	    		if (!(xpos in visited)) {
+		    		visited[xpos] = xpos;
+		    		var up=[xpos[0],xpos[1]+1];
+		    		var le=[xpos[0]-1,xpos[1]];
+		    		var ri=[xpos[0]+1,xpos[1]];
+		    		var dw=[xpos[0],xpos[1]-1];
+		    		[up,le,ri,dw].forEach(function (p) {
+		    			if (game.noWalkTerrains.search(game.terrain.square(p)) < 0) {
+		    				listToDo.push(p);
+		    			}
+		    		});
+		    	}
+    		});
+		}    	
+    	return iterable(visited).select(1).toArray();
 	},
 
 
@@ -154,33 +138,33 @@ clone: function clone(){
 /** piece must be inLineofSight NO TIENE SENTIDO?
 */
 	possibleAttacks: function possibleAttacks(game){
-		
-
-    	var xpieces=[];
-		for( var piece in game.pieces){
-			if (piece.owner!=this.owner && piece.hp>piece.damageRecibed && pieceInLineOfSight(game,piece,'bline')){
-        			euqDist= Math.sqrt(Math.pow(this.position[0]-piec.position[0],2)+Math.pow(this.position[1]-piec.position[1],2));
-					if(euqDist<=this.attackRange){
-						xpieces[xpieces.length+1]=piece;
-					}
+    	var self = this;
+		return game.pieces.filter(function (piece){
+			if (piece.owner != self.owner && pieceInLineOfSight(game, piece, 'bline')) {
+        		var dist = Math.sqrt(Math.pow(self.position[0] - piece.position[0], 2) + 
+        			Math.pow(self.position[1] - piec.position[1], 2));
+				return dist <= self.attackRange;
+			} else {
+				return false;
 			}
-		}
-		return xpieces;
+		});
 	},
 
 /** Calculates damage to enemy 'piece' considering hit chance. 
 	Once its established that you can atack this piece
 */
 	attack: function attack(piece){
-		piece.suffer(hitChance);
+		piece = piece.clone();
+		piece.damageReceived += this.damage * this.hitChance * (1-piece.saveChance);
+		return piece;
 	},
 
-
-/** Calculates 'damage' recibed considering 'savechance' considering hit chance. 
-
+/** Return true if piece has not been destroyed yet.
 */
-	suffer: function suffer(damage){
-		this.damage += damage*(1-saveChance);
+	isAlive: function isAlive(){
+		return this.hp > this.damageReceived;
 	}
+
+
 }); // declare TacticsPiece
 

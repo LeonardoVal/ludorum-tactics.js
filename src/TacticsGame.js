@@ -4,7 +4,8 @@
 var TacticsGame = exports.TacticsGame = declare(Game, {
 	players : ['Left', 'Right'],
 	name : 'TacticsGame',
-	noViewTerrains:'xo#',
+	noViewTerrains:'x#',
+	noWalkTerrains:'o#',
 
 	
 
@@ -47,13 +48,25 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		raiseIf(!moves.hasOwnProperty(currentPiece.owner),
 			"Active player has no moves in ", JSON.stringify(moves), "!");
 		if (!this.hasMoved) {
-			var piece = this.pieces[this.currentPiece].clone();
+			var piece = currentPiece.clone();
 			piece.position = moves[currentPiece.owner];
 			var newPieces = this.pieces.concat([]);
 			newPieces[currentPiece] = piece;
 			return new this.constructor(newPieces, this.currentPiece, true);
 		} else {
-			//TODO
+			var index = moves[currentPiece.owner]
+			var target = this.pieces[index];
+			var enemyPiece = currentPiece.attack(target);
+			var newPieces = this.pieces.concat([]);
+			if (enemyPiece.isAlive()) {
+				newPieces[index] = enemyPiece;
+			} else {
+				if (index < this.currentPiece) {
+					this.currentPiece--;
+				}
+				newPieces.splice(index,1);
+			}
+			return new this.constructor(newPieces, (this.currentPiece+1) % this.pieces.length, false);
 		}
 	}, 
 	

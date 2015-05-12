@@ -11,6 +11,7 @@
 })(this, function __init__(base, ludorum) { "use strict";
 // Import synonyms. ////////////////////////////////////////////////////////////////////////////////
 	var declare = base.declare,
+		iterable = base.iterable,
 		Game = ludorum.Game,
 		raiseIf = base.raiseIf;
 
