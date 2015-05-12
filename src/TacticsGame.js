@@ -4,6 +4,7 @@
 var TacticsGame = exports.TacticsGame = declare(Game, {
 	players : ['Left', 'Right'],
 	name : 'TacticsGame',
+	noViewTerrains:'xo#',
 
 	
 
