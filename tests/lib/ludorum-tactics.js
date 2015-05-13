@@ -12,6 +12,7 @@
 // Import synonyms. ////////////////////////////////////////////////////////////////////////////////
 	var declare = base.declare,
 		iterable = base.iterable,
+		initialize = base.initialize,
 		Game = ludorum.Game,
 		raiseIf = base.raiseIf;
 
@@ -25,81 +26,86 @@
 /** # Tactics Piece
 */
 
-var TacticsPiece  = exports.TacticsPiece= declare({
-/**
-	   hp :Cantidad de unidades 
-	   hitChance 0-1
-	   saveChance 0-1
-	   attackRange 0-3
-	   movementSpeed 0-5
-	   position xxyy 
-	   
-	*/
-	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position,owner){
-		this.position=position;
-		this.hp=hp;
-		this.damageReceived=0;
-
-		this.hitChance=hitChance;
-		this.saveChance=saveChance;
-
-		this.attackRange=attackRange;
-		this.movement=movement;
-		this.owner=owner;
+var TacticsPiece  = exports.TacticsPiece = declare({
+	
+	/** The constructor takes an object with the following data:
+	
+	+ `owner`: The player that owns (and hence controls) this piece.
+	+ `position`: Coordinate (`[row, column]`) in the board where the piece is located.
+	+ `movement=1`: Distance the piece can move. It must be between 1 and 4.
+	+ `hp`: Amount of health points.
+	+ `damage=0`: Amount of damage received.
+	+ `attackChance`: Chance of hiting a target while attacking.
+	+ `attackDamage`: Maximum amount of damage this piece's attack can do.
+	+ `attackRange`: Maximum distance upto which a target can be attacked.
+	+ `defenseChance`: Chance of saving an attack.
+	*/	
+	constructor: function TacticsPiece(props){
+		initialize(this, props)
+			.string('owner')
+			.array('position', { length: 2, elementType: base.types.INTEGER })
+			.integer('movement', { defaultValue: 1, minimum: 1, maximum: 4 })
+			.integer('hp')
+			.integer('damage', { defaultValue: 0 })
+			.number('attackChance', { ignore: true, minimum: 0, maximum: 1 })
+			.number('attackDamage', { ignore: true, minimum: 1 })
+			.number('attackRange', { ignore: true, minimum: 1, maximum: 3 })
+			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 });
 	},
 
-/**
-	Clone method
-*/
-clone: function clone(){
-	var xclone=new TacticsPiece();
-		xclone.position=this.position;
-		xclone.hp=this.hp;
-		xclone.damageReceived=this.damageReceived;
-		xclone.hitChance=this.hitChance;
-		xclone.saveChance=this.saveChance;
-		xclone.attackRange=this.attackRange;
-		xclone.movement=this.movement;
-		xclone.owner=this.owner;
-	return xclone;
+	/** The values of properties that do not change during the game should be in the prototype.
+	*/
+	attackChance: 0.5,
+	attackDamage: 10,
+	attackRange: 4,
+	defenseChance: 0.3,
+	
+	/** Return a copy of this piece. Useful to generate new game states.
+	*/
+	clone: function clone(){
+		return new this.constructor(this);
+	},
 
-},
-
-
-/** Movement of the piece considering the terrain and other pieces that info is passed through game
-	cant walk over my pieces
-	Calculo paso n 
-	Guardo paso n. en listareturn y en lista next
-	Calculo paso n+1 de lista next 
-	Guardo paso n+1 en listareturn y en lista next
-	repito hasta que movimientos =0
-	Matrix for movements, 
-
-	return list of moves ([x,y],...,[xn,yn])
-*/
+	/** Return true if piece has been destroyed.
+	*/
+	isDestroyed: function isDestroyed(){
+		return this.hp <= this.damageReceived;
+	},
+	
+	/** Calculates the array of positions in the terrain where this piece can move to.
+	*/
 	moves: function moves(game){
-    	var visited={};
-    	var listToDo=[this.position];
-    	for (var ms = 0; ms <= this.movementSpeed; ms++){	
-    		listToDo.forEach(function (xpos) {	
+    	var visited = {},
+			pending = [this.position], 
+			current, up, left, right, down;
+    	for (var ms = 0; ms <= this.movement; ms++) {
+			current = pending;
+			pending = [];
+    		current.forEach(function (xpos) {	
 	    		if (!(xpos in visited)) {
 		    		visited[xpos] = xpos;
-		    		var up=[xpos[0],xpos[1]+1];
-		    		var le=[xpos[0]-1,xpos[1]];
-		    		var ri=[xpos[0]+1,xpos[1]];
-		    		var dw=[xpos[0],xpos[1]-1];
-		    		[up,le,ri,dw].forEach(function (p) {
-		    			if (game.noWalkTerrains.search(game.terrain.square(p)) < 0) {
-		    				listToDo.push(p);
+		    		up = [xpos[0], xpos[1] + 1];
+		    		left = [xpos[0] - 1, xpos[1]];
+		    		right = [xpos[0] + 1, xpos[1]];
+		    		down = [xpos[0], xpos[1] - 1];
+		    		[up, left, right, down].forEach(function (p) {
+		    			if (game.isPassable(p)) {
+		    				pending.push(p);
 		    			}
 		    		});
 		    	}
     		});
 		}    	
-    	return iterable(visited).select(1).toArray();
+    	return iterable(visited).select(1).toArray(); // Return the values of visited.
 	},
-
-
+	
+	/** Builds a clone of this piece with its position changed to the given `position`.
+	*/
+	moveTo: function moveTo(position) {
+		var r = this.clone();
+		r.position = position;
+		return r;
+	},
 
 /** NO TESTING MADE 
 	If a 'piece' if next to me its visible and you should consider terrain. 
@@ -111,7 +117,7 @@ clone: function clone(){
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
-	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game,piece){
+	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game, piece){
 		//FIXME should i use this to calculate posibleatacks instead euclidean distance
  		var x0= this.position[0];
  		var y0= this.position[1];
@@ -135,61 +141,44 @@ clone: function clone(){
 		  
 		return true;  
 	},
-/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game',
-	'methodCode' type of function used to trace distance for bline : 'bline'
-*/
-	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
-		switch(expression) {
-	    	case 'bline':
-	        	return v=(this.BresenhamLineAlgorithm(game,piece));
-	    	default:
-	        	 return v=(this.BresenhamLineAlgorithm(game,piece));
-		}				
+	
+	/** Checks if the given `piece` is in line of sight of this piece, considering the terrain of 
+	the `game`.
+	*/
+	pieceInLineOfSight: function pieceInLineOfSight(game, piece){
+		return this.inLineOfSight(game, piece.position);				
 	},
-/** Calculates if a 'position' [x0,y0] is in line of sight 
-	'methodCode' type of function used to trace distance for bline : 'bline'
-*/
-	 inLineOfSight: function inLineofSight(game,position,methodCode){
-	 	var xpiece=new TacticsPiece();
-	 	xpiece.position= position;
-		switch(expression) {
-	    	case 'bline':
-	        	return v= (this.BresenhamLineAlgorithm(game,position));
-	    	default:
-	        	return v=(this.BresenhamLineAlgorithm(game,position));
-	        }
+	
+	/** Checks if a `position` ([row,column]) is in line of sight of this piece, considering the 
+	terrain of the `game`.
+	*/
+	inLineOfSight: function inLineofSight(game, position){
+	 	return true; //FIXME this.bresenham(game, position));
 	},
-/** piece must be inLineofSight NO TIENE SENTIDO?
-*/
+
+	/** piece must be inLineofSight NO TIENE SENTIDO?
+	*/
 	possibleAttacks: function possibleAttacks(game){
     	var self = this;
 		return game.pieces.filter(function (piece){
-			if (piece.owner != self.owner && pieceInLineOfSight(game, piece, 'bline')) {
+			if (piece.owner != self.owner) {
         		var dist = Math.sqrt(Math.pow(self.position[0] - piece.position[0], 2) + 
         			Math.pow(self.position[1] - piec.position[1], 2));
-				return dist <= self.attackRange;
+				return dist <= self.attackRange && self.pieceInLineOfSight(game, piece);
 			} else {
 				return false;
 			}
 		});
 	},
 
-/** Calculates damage to enemy 'piece' considering hit chance. 
-	Once its established that you can atack this piece
-*/
+	/** Calculates damage to enemy 'piece' considering hit chance. 
+		Once its established that you can atack this piece
+	*/
 	attack: function attack(piece){
 		piece = piece.clone();
 		piece.damageReceived += this.damage * this.hitChance * (1-piece.saveChance);
 		return piece;
-	},
-
-/** Return true if piece has not been destroyed yet.
-*/
-	isAlive: function isAlive(){
-		return this.hp > this.damageReceived;
 	}
-
-
 }); // declare TacticsPiece
 
 
@@ -198,13 +187,25 @@ clone: function clone(){
 
 */
 var TacticsGame = exports.TacticsGame = declare(Game, {
-	players : ['Left', 'Right'],
-	name : 'TacticsGame',
-	noViewTerrains:'x#',
-	noWalkTerrains:'o#',
+	name: 'TacticsGame',
+	players: ['Left', 'Right'],
 
+	/** The constructor takes a list of `pieces`, the index of the `currentPiece` and if the current
+	piece has moved or not.
+	*/
+	constructor: function TacticsGame(pieces, currentPiece, hasMoved){
+		Game.call(this, pieces[currentPiece |0].owner);
+		this.pieces = pieces;
+		this.currentPiece = currentPiece |0;
+		this.hasMoved = !!hasMoved;
+		// Map of positions to pieces, used to speed up move calculations.
+		this.__piecesByPosition__ = iterable(pieces).map(function (p) {
+			return [p.position +'', p];
+		}).toObject();
+	},
 	
-
+	// ## Terrain ##################################################################################
+	
 	terrain: new ludorum.utils.CheckerboardFromString(10, 15,
 		'...x...........'+
 		'...x.....o.....'+
@@ -217,73 +218,85 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		'....xx.........'+
 		'.........#.....'
 	),
-
-	constructor: function TacticsGame(pieces,currentPiece,hasMoved){
-		//ToDo ver que hacer cuando me llaman sin parámetros.
-		Game.call(this, pieces[currentPiece].owner);
-		this.pieces = pieces;
-		this.currentPiece = currentPiece|0;
-		this.hasMoved = !!hasMoved;
+	
+	/** Checks if a position in the terrain is passable, allowing pieces to stand on or go through 
+	it.
+	*/
+	isPassable: function isPassable(position) {
+		return '.x'.indexOf(this.terrain.square(position)) >= 0 && !this.__piecesByPosition__[position +'']; 
 	},
 	
-	/**
-	Gets movements. 
+	/** Checks if a position in the terrain is clear, allowing pieces to see what is there or though
+	it.
+	*/
+	isClear: function isClear(position) {
+		return '.o'.indexOf(this.terrain.square(position)) >= 0; 
+	}, 
+	
+	// ## Game logic ###############################################################################
+	 
+	/** If the current pieces has not moves, returns its possible moves. If it has moves, returns 
+	its attacks. If 
 	*/
 	moves: function moves(){
-		var currentPiece = this.pieces[this.currentPiece];
-		if (!this.hasMoved) {
-			return currentPiece.moves(this);
-		} else {
-			return currentPiece.possibleAttacks(this);
+		if (!this.hasOwnProperty('__moves__')) { // this.__moves__ is used to cache the move calculations.
+			var currentPiece = this.pieces[this.currentPiece];
+			if (currentPiece && !this.result()) { // There is a current piece and the game has not finished.
+				if (!this.hasMoved) {
+					this.__moves__ = currentPiece.moves(this);
+				} else {
+					this.__moves__ = currentPiece.possibleAttacks(this);
+				}
+			} else {
+				this.__moves__ = null;
+			}
 		}
+		return this.__moves__;
 	},
 
-	next : function next(moves){
+	/** Builds the next game state with the given move.
+	*/
+	next: function next(moves){
 		var currentPiece = this.pieces[this.currentPiece],
 			newPieces = this.pieces.concat([]);
-		raiseIf(!moves.hasOwnProperty(currentPiece.owner),
-			"Active player has no moves in ", JSON.stringify(moves), "!");
+		raiseIf(!moves.hasOwnProperty(currentPiece.owner), "Active player has no moves in ", JSON.stringify(moves), "!");
 		if (!this.hasMoved) {
-			var piece = currentPiece.clone();
-			piece.position = moves[currentPiece.owner];
-			newPieces[currentPiece] = piece;
+			newPieces[currentPiece] = currentPiece.moveTo(moves[currentPiece.owner]);
 			return new this.constructor(newPieces, this.currentPiece, true);
 		} else {
-			var index = moves[currentPiece.owner];
-			var target = this.pieces[index];
-			var enemyPiece = currentPiece.attack(target);
-			if (enemyPiece.isAlive()) {
-				newPieces[index] = enemyPiece;
-			} else {
+			var index = moves[currentPiece.owner],
+				target = this.pieces[index],
+				attackedPiece = currentPiece.attack(target);
+			if (attackedPiece.isDestroyed()) {
 				if (index < this.currentPiece) {
 					this.currentPiece--;
 				}
 				newPieces.splice(index,1);
+			} else {
+				newPieces[index] = attackedPiece;
 			}
 			return new this.constructor(newPieces, (this.currentPiece+1) % this.pieces.length, false);
 		}
 	}, 
 	
-	result : function result(){
-		var game = this;
-		var hasPieces = game.players.map(function(player){
-			return game.pieces.filter(function(piece){
-				return piece.owner === player;
-			}).length > 0;
-		});
-		if (hasPieces[0] === 0){
-			return game.defeat(this.players[0]);
+	/** By default the player that loses all their pieces loses.
+	*/
+	result: function result(){
+		var game = this,
+			pieceCounts = iterable(this.players).map(function (player) {
+				var count = game.pieces.filter(function (piece){
+					return piece.owner === player;
+				}).length;
+				return [player, count];
+			}).toObject();
+		if (pieceCounts.Left < 1) {
+			return this.victory('Right', pieceCounts.Right);
+		} else if (pieceCounts.Right < 1) {
+			return this.victory('Left', pieceCounts.Left);
+		} else {
+			return null;
 		}
-		if (hasPieces[1] === 0) {
-			return game.defeat(this.players[1]);
-		}
-		return null;
-	},
-
-	generateThreatMap: function generateThreatMap(){
-		//ToDo
 	}
-
 }); // declare TacticsGame
 
 

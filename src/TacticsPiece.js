@@ -1,4 +1,4 @@
-/** # Tactics Piece
+﻿/** # Tactics Piece
 */
 
 var TacticsPiece  = exports.TacticsPiece = declare({
@@ -25,50 +25,62 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 			.number('attackChance', { ignore: true, minimum: 0, maximum: 1 })
 			.number('attackDamage', { ignore: true, minimum: 1 })
 			.number('attackRange', { ignore: true, minimum: 1, maximum: 3 })
-			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 })
+			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 });
 	},
 
+	/** The values of properties that do not change during the game should be in the prototype.
+	*/
+	attackChance: 0.5,
+	attackDamage: 10,
+	attackRange: 4,
+	defenseChance: 0.3,
+	
 	/** Return a copy of this piece. Useful to generate new game states.
 	*/
 	clone: function clone(){
 		return new this.constructor(this);
 	},
 
-
-/** Movement of the piece considering the terrain and other pieces that info is passed through game
-	cant walk over my pieces
-	Calculo paso n 
-	Guardo paso n. en listareturn y en lista next
-	Calculo paso n+1 de lista next 
-	Guardo paso n+1 en listareturn y en lista next
-	repito hasta que movimientos =0
-	Matrix for movements, 
-
-	return list of moves ([x,y],...,[xn,yn])
-*/
+	/** Return true if piece has been destroyed.
+	*/
+	isDestroyed: function isDestroyed(){
+		return this.hp <= this.damageReceived;
+	},
+	
+	/** Calculates the array of positions in the terrain where this piece can move to.
+	*/
 	moves: function moves(game){
-    	var visited={};
-    	var listToDo=[this.position];
-    	for (var ms = 0; ms <= this.movementSpeed; ms++){	
-    		listToDo.forEach(function (xpos) {	
+    	var visited = {},
+			pending = [this.position], 
+			current, up, left, right, down;
+    	for (var ms = 0; ms <= this.movement; ms++) {
+			current = pending;
+			pending = [];
+    		current.forEach(function (xpos) {	
 	    		if (!(xpos in visited)) {
 		    		visited[xpos] = xpos;
-		    		var up=[xpos[0],xpos[1]+1];
-		    		var le=[xpos[0]-1,xpos[1]];
-		    		var ri=[xpos[0]+1,xpos[1]];
-		    		var dw=[xpos[0],xpos[1]-1];
-		    		[up,le,ri,dw].forEach(function (p) {
-		    			if (game.noWalkTerrains.search(game.terrain.square(p)) < 0) {
-		    				listToDo.push(p);
+		    		up = [xpos[0], xpos[1] + 1];
+		    		left = [xpos[0] - 1, xpos[1]];
+		    		right = [xpos[0] + 1, xpos[1]];
+		    		down = [xpos[0], xpos[1] - 1];
+		    		[up, left, right, down].forEach(function (p) {
+		    			if (game.isPassable(p)) {
+		    				pending.push(p);
 		    			}
 		    		});
 		    	}
     		});
 		}    	
-    	return iterable(visited).select(1).toArray();
+    	return iterable(visited).select(1).toArray(); // Return the values of visited.
 	},
-
-
+	
+	/** Builds a clone of this piece with its position changed to the given `position`.
+	*/
+	moveTo: function moveTo(position) {
+		var r = this.clone();
+		r.position = position;
+		return r;
+	},
 
 /** NO TESTING MADE 
 	If a 'piece' if next to me its visible and you should consider terrain. 
@@ -80,7 +92,7 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 	modified version of Bresenham algorithm 
 	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
 */
-	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game,piece){
+	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game, piece){
 		//FIXME should i use this to calculate posibleatacks instead euclidean distance
  		var x0= this.position[0];
  		var y0= this.position[1];
@@ -104,60 +116,43 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 		  
 		return true;  
 	},
-/** Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain of the 'game',
-	'methodCode' type of function used to trace distance for bline : 'bline'
-*/
-	pieceInLineOfSight: function pieceInLineOfSight(game,piece,methodCode){
-		switch(expression) {
-	    	case 'bline':
-	        	return v=(this.BresenhamLineAlgorithm(game,piece));
-	    	default:
-	        	 return v=(this.BresenhamLineAlgorithm(game,piece));
-		}				
+	
+	/** Checks if the given `piece` is in line of sight of this piece, considering the terrain of 
+	the `game`.
+	*/
+	pieceInLineOfSight: function pieceInLineOfSight(game, piece){
+		return this.inLineOfSight(game, piece.position);				
 	},
-/** Calculates if a 'position' [x0,y0] is in line of sight 
-	'methodCode' type of function used to trace distance for bline : 'bline'
-*/
-	 inLineOfSight: function inLineofSight(game,position,methodCode){
-	 	var xpiece=new TacticsPiece();
-	 	xpiece.position= position;
-		switch(expression) {
-	    	case 'bline':
-	        	return v= (this.BresenhamLineAlgorithm(game,position));
-	    	default:
-	        	return v=(this.BresenhamLineAlgorithm(game,position));
-	        }
+	
+	/** Checks if a `position` ([row,column]) is in line of sight of this piece, considering the 
+	terrain of the `game`.
+	*/
+	inLineOfSight: function inLineofSight(game, position){
+	 	return true; //FIXME this.bresenham(game, position));
 	},
-/** piece must be inLineofSight NO TIENE SENTIDO?
-*/
+
+	/** piece must be inLineofSight NO TIENE SENTIDO?
+	*/
 	possibleAttacks: function possibleAttacks(game){
     	var self = this;
 		return game.pieces.filter(function (piece){
-			if (piece.owner != self.owner && pieceInLineOfSight(game, piece, 'bline')) {
+			if (piece.owner != self.owner) {
         		var dist = Math.sqrt(Math.pow(self.position[0] - piece.position[0], 2) + 
         			Math.pow(self.position[1] - piec.position[1], 2));
-				return dist <= self.attackRange;
+				return dist <= self.attackRange && self.pieceInLineOfSight(game, piece);
 			} else {
 				return false;
 			}
 		});
 	},
 
-/** Calculates damage to enemy 'piece' considering hit chance. 
-	Once its established that you can atack this piece
-*/
+	/** Calculates damage to enemy 'piece' considering hit chance. 
+		Once its established that you can atack this piece
+	*/
 	attack: function attack(piece){
 		piece = piece.clone();
 		piece.damageReceived += this.damage * this.hitChance * (1-piece.saveChance);
 		return piece;
-	},
-
-/** Return true if piece has not been destroyed yet.
-*/
-	isAlive: function isAlive(){
-		return this.hp > this.damageReceived;
 	}
-
-
 }); // declare TacticsPiece
 
