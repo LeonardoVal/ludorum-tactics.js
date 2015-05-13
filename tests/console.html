@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html><head>
+	<title>Ludorum-tactics console.</title>
+	<meta charset="UTF-8"/>
+	<script src="lib/require.js"></script>
+</head><body onload="main();">
+	<script type="text/javascript"> "use strict";
+function main() {
+	require.config({ 
+		paths: {
+			"creatartis-base": "lib/creatartis-base",
+			"ludorum": "lib/ludorum",
+			"ludorum-tactics": "lib/ludorum-tactics"
+		},
+	});
+	require(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludorum, tactics) {
+		window.base = base;
+		window.ludorum = ludorum;
+		window.tactics = tactics;
+		(function (s){ // See: <http://jsconsole.com>.
+			s.src = 'jsconsole/inject.js';
+			document.body.appendChild(s);
+		})(document.createElement('script'));
+	}, function (error) {
+		throw error;
+	});
+}
+	</script>
+</body></html>
