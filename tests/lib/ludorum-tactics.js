@@ -14,6 +14,7 @@
 		iterable = base.iterable,
 		initialize = base.initialize,
 		Game = ludorum.Game,
+		raise = base.raise,
 		raiseIf = base.raiseIf;
 
 // Library layout. /////////////////////////////////////////////////////////////////////////////////
@@ -27,12 +28,11 @@
 */
 
 var TacticsPiece  = exports.TacticsPiece = declare({
-	
 	/** The constructor takes an object with the following data:
 	
 	+ `owner`: The player that owns (and hence controls) this piece.
 	+ `position`: Coordinate (`[row, column]`) in the board where the piece is located.
-	+ `movement=1`: Distance the piece can move. It must be between 1 and 4.
+	+ `movement=1`: Distance the piece can move.
 	+ `hp`: Amount of health points.
 	+ `damage=0`: Amount of damage received.
 	+ `attackChance`: Chance of hiting a target while attacking.
@@ -44,17 +44,20 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 		initialize(this, props)
 			.string('owner')
 			.array('position', { length: 2, elementType: base.types.INTEGER })
-			.integer('movement', { defaultValue: 1, minimum: 1, maximum: 4 })
-			.integer('hp')
-			.integer('damage', { defaultValue: 0 })
+			.number('damage', { defaultValue: 0 })
+			.integer('movement', { ignore: true, minimum: 1 })
+			.integer('hp', { ignore: true, minimum: 1 })
 			.number('attackChance', { ignore: true, minimum: 0, maximum: 1 })
 			.number('attackDamage', { ignore: true, minimum: 1 })
-			.number('attackRange', { ignore: true, minimum: 1, maximum: 3 })
+			.number('attackRange', { ignore: true, minimum: 1 })
 			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 });
 	},
 
 	/** The values of properties that do not change during the game should be in the prototype.
 	*/
+	name: 'TacticsPiece',
+	movement: 2,
+	hp: 10,
 	attackChance: 0.5,
 	attackDamage: 10,
 	attackRange: 4,
@@ -69,7 +72,7 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 	/** Return true if piece has been destroyed.
 	*/
 	isDestroyed: function isDestroyed(){
-		return this.hp <= this.damageReceived;
+		return this.hp <= this.damage;
 	},
 	
 	/** Calculates the array of positions in the terrain where this piece can move to.
@@ -107,38 +110,33 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 		return r;
 	},
 
-/** NO TESTING MADE 
-	If a 'piece' if next to me its visible and you should consider terrain. 
-	Calculates if a 'piece' is in line of sight, considering the terrain and type of terrain. 
-	variable:
-	'game.noViewTerrains' a string representing all the terrains that cut view example x:mountain, y:fog then 
-	noviewTerrains= 'xy')
-	
-	modified version of Bresenham algorithm 
-	http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript
-*/
-	BresenhamLineAlgorithm: function BresenhamLineAlgorithm(game, piece){
-		//FIXME should i use this to calculate posibleatacks instead euclidean distance
- 		var x0= this.position[0];
- 		var y0= this.position[1];
- 		var x1= piece.position[0];
- 		var y1= piece.position[1];
- 		var dx = Math.abs(x1 - x0);
- 		var sx = x0 < x1 ? 1 : -1;
-  		var dy = Math.abs(y1 - y0);
-  		if (dx <=1 && dy<=1 ){
+	/** Modified version of the [Bresenham line algorithm
+	](http://rosettacode.org/wiki/Bitmap/Bresenham%27s_line_algorithm#JavaScript) to check if there
+	is line of sight.
+	*/
+	bresenham: function bresenham(game, destination) {
+ 		var x0 = this.position[0], y0 = this.position[1],
+			x1 = destination[0], y1 = destination[1],
+			dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+  		if (dx <= 1 && dy <= 1){
   			return true;
   		}
-  		var sy = y0 < y1 ? 1 : -1; 
-  		var err = (dx>dy ? dx : -dy)/2;
-		  while (true) {
-		  	if (game.noViewTerrains.search(game.terrain.square([x0,y0])==-1)){return false;}
-		    if (x0 === x1 && y0 === y1) break;
-		    	var  e2 = err;
-		    if (e2 > -dx) { err -= dy; x0 += sx; }
-		    if (e2 < dy) { err += dx; y0 += sy; }
-		  }
-		  
+		var sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1,
+			err = (dx > dy ? dx : -dy) / 2, err2;
+		while (x0 !== x1 || y0 !== y1) {
+		  	if (!game.isClear([x0, y0])) {
+				return false;
+			}
+		    err2 = err;
+		    if (err2 > -dx) { 
+				err -= dy; 
+				x0 += sx;
+			}
+		    if (err2 < dy) {
+				err += dx; 
+				y0 += sy;
+			}
+		}  
 		return true;  
 	},
 	
@@ -153,22 +151,24 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 	terrain of the `game`.
 	*/
 	inLineOfSight: function inLineofSight(game, position){
-	 	return true; //FIXME this.bresenham(game, position));
+	 	return this.bresenham(game, position);
 	},
 
-	/** piece must be inLineofSight NO TIENE SENTIDO?
+	/** Returns an array with the indexes in `game.pieces` of the pieces this piece can attack.
 	*/
 	possibleAttacks: function possibleAttacks(game){
     	var self = this;
-		return game.pieces.filter(function (piece){
-			if (piece.owner != self.owner) {
+		return iterable(game.pieces).filter(function (piece) {
+			if (piece !== self && piece.owner != self.owner) {
         		var dist = Math.sqrt(Math.pow(self.position[0] - piece.position[0], 2) + 
-        			Math.pow(self.position[1] - piec.position[1], 2));
+        			Math.pow(self.position[1] - piece.position[1], 2));
 				return dist <= self.attackRange && self.pieceInLineOfSight(game, piece);
 			} else {
 				return false;
 			}
-		});
+		}, function (piece, i) {
+			return i;
+		}).toArray();
 	},
 
 	/** Calculates damage to enemy 'piece' considering hit chance. 
@@ -176,9 +176,15 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 	*/
 	attack: function attack(piece){
 		piece = piece.clone();
-		piece.damageReceived += this.damage * this.hitChance * (1-piece.saveChance);
+		piece.damage += this.attackDamage * this.attackChance * (1 - piece.defenseChance);
 		return piece;
-	}
+	},
+	
+	toString: function toString() {
+		return this.name +"("+ 
+			this.owner +"@"+ this.position +" "+ (this.hp - this.damage) +"/"+ this.hp +
+		")";
+	} 
 }); // declare TacticsPiece
 
 
@@ -194,9 +200,13 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	piece has moved or not.
 	*/
 	constructor: function TacticsGame(pieces, currentPiece, hasMoved){
-		Game.call(this, pieces[currentPiece |0].owner);
+		currentPiece = currentPiece |0;
+		if (!pieces[currentPiece]) {
+			raise("Current piece ", currentPiece, " is not valid (pieces: ", JSON.stringify(pieces), ")!");
+		}
+		Game.call(this, pieces[currentPiece].owner);
 		this.pieces = pieces;
-		this.currentPiece = currentPiece |0;
+		this.currentPiece = currentPiece;
 		this.hasMoved = !!hasMoved;
 		// Map of positions to pieces, used to speed up move calculations.
 		this.__piecesByPosition__ = iterable(pieces).map(function (p) {
@@ -242,10 +252,11 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		if (!this.hasOwnProperty('__moves__')) { // this.__moves__ is used to cache the move calculations.
 			var currentPiece = this.pieces[this.currentPiece];
 			if (currentPiece && !this.result()) { // There is a current piece and the game has not finished.
+				this.__moves__ = {};
 				if (!this.hasMoved) {
-					this.__moves__ = currentPiece.moves(this);
+					this.__moves__[currentPiece.owner] = currentPiece.moves(this);
 				} else {
-					this.__moves__ = currentPiece.possibleAttacks(this);
+					this.__moves__[currentPiece.owner] = ['pass'].concat(currentPiece.possibleAttacks(this));
 				}
 			} else {
 				this.__moves__ = null;
@@ -259,23 +270,31 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	next: function next(moves){
 		var currentPiece = this.pieces[this.currentPiece],
 			newPieces = this.pieces.concat([]);
-		raiseIf(!moves.hasOwnProperty(currentPiece.owner), "Active player has no moves in ", JSON.stringify(moves), "!");
+		if (!moves.hasOwnProperty(currentPiece.owner)) {
+			console.log(this +"\n"+ JSON.stringify(moves) +" from "+ JSON.stringify(this.moves()) +"!");//FIXME
+			delete this.__moves__;
+			console.log("\t"+ JSON.stringify(this.moves()) +"?");//FIXME
+			raise("Active player ", currentPiece.owner, " has no moves in ", JSON.stringify(moves), "!");
+		}
+		var move = moves[currentPiece.owner];
 		if (!this.hasMoved) {
-			newPieces[currentPiece] = currentPiece.moveTo(moves[currentPiece.owner]);
+			newPieces[this.currentPiece] = currentPiece.moveTo(move);
 			return new this.constructor(newPieces, this.currentPiece, true);
 		} else {
-			var index = moves[currentPiece.owner],
-				target = this.pieces[index],
-				attackedPiece = currentPiece.attack(target);
-			if (attackedPiece.isDestroyed()) {
-				if (index < this.currentPiece) {
-					this.currentPiece--;
+			var nextPiece = this.currentPiece + 1;
+			if (move !== 'pass') {
+				var target = this.pieces[move],
+					attackedPiece = currentPiece.attack(target);
+				if (attackedPiece.isDestroyed()) {
+					if (move < this.currentPiece) {
+						nextPiece--;
+					}
+					newPieces.splice(move, 1);
+				} else {
+					newPieces[move] = attackedPiece;
 				}
-				newPieces.splice(index,1);
-			} else {
-				newPieces[index] = attackedPiece;
 			}
-			return new this.constructor(newPieces, (this.currentPiece+1) % this.pieces.length, false);
+			return new this.constructor(newPieces, nextPiece % newPieces.length, false);
 		}
 	}, 
 	
@@ -296,6 +315,22 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		} else {
 			return null;
 		}
+	},
+	
+	// ## Utilities ################################################################################
+	
+	__serialize__: function __serialize__() {
+		return [this.name, this.pieces, this.currentPiece, this.hasMoved];
+	},
+	
+	toString: function toString() {
+		var game = this;
+		return this.name +"("+ this.currentPiece +":"+ this.pieces[this.currentPiece] +" "+ 
+			(this.hasMoved ? "attacks" : "moves") +
+			this.pieces.map(function (p, i) {
+				return i === game.currentPiece ? "" : ", "+ i +":"+ p;
+			}).join("") +
+		")";
 	}
 }); // declare TacticsGame
 

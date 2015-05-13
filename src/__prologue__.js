@@ -14,6 +14,7 @@
 		iterable = base.iterable,
 		initialize = base.initialize,
 		Game = ludorum.Game,
+		raise = base.raise,
 		raiseIf = base.raiseIf;
 
 // Library layout. /////////////////////////////////////////////////////////////////////////////////

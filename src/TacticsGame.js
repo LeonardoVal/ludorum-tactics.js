@@ -9,9 +9,13 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	piece has moved or not.
 	*/
 	constructor: function TacticsGame(pieces, currentPiece, hasMoved){
-		Game.call(this, pieces[currentPiece |0].owner);
+		currentPiece = currentPiece |0;
+		if (!pieces[currentPiece]) {
+			raise("Current piece ", currentPiece, " is not valid (pieces: ", JSON.stringify(pieces), ")!");
+		}
+		Game.call(this, pieces[currentPiece].owner);
 		this.pieces = pieces;
-		this.currentPiece = currentPiece |0;
+		this.currentPiece = currentPiece;
 		this.hasMoved = !!hasMoved;
 		// Map of positions to pieces, used to speed up move calculations.
 		this.__piecesByPosition__ = iterable(pieces).map(function (p) {
@@ -57,10 +61,11 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		if (!this.hasOwnProperty('__moves__')) { // this.__moves__ is used to cache the move calculations.
 			var currentPiece = this.pieces[this.currentPiece];
 			if (currentPiece && !this.result()) { // There is a current piece and the game has not finished.
+				this.__moves__ = {};
 				if (!this.hasMoved) {
-					this.__moves__ = currentPiece.moves(this);
+					this.__moves__[currentPiece.owner] = currentPiece.moves(this);
 				} else {
-					this.__moves__ = currentPiece.possibleAttacks(this);
+					this.__moves__[currentPiece.owner] = ['pass'].concat(currentPiece.possibleAttacks(this));
 				}
 			} else {
 				this.__moves__ = null;
@@ -74,23 +79,31 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	next: function next(moves){
 		var currentPiece = this.pieces[this.currentPiece],
 			newPieces = this.pieces.concat([]);
-		raiseIf(!moves.hasOwnProperty(currentPiece.owner), "Active player has no moves in ", JSON.stringify(moves), "!");
+		if (!moves.hasOwnProperty(currentPiece.owner)) {
+			console.log(this +"\n"+ JSON.stringify(moves) +" from "+ JSON.stringify(this.moves()) +"!");//FIXME
+			delete this.__moves__;
+			console.log("\t"+ JSON.stringify(this.moves()) +"?");//FIXME
+			raise("Active player ", currentPiece.owner, " has no moves in ", JSON.stringify(moves), "!");
+		}
+		var move = moves[currentPiece.owner];
 		if (!this.hasMoved) {
-			newPieces[currentPiece] = currentPiece.moveTo(moves[currentPiece.owner]);
+			newPieces[this.currentPiece] = currentPiece.moveTo(move);
 			return new this.constructor(newPieces, this.currentPiece, true);
 		} else {
-			var index = moves[currentPiece.owner],
-				target = this.pieces[index],
-				attackedPiece = currentPiece.attack(target);
-			if (attackedPiece.isDestroyed()) {
-				if (index < this.currentPiece) {
-					this.currentPiece--;
+			var nextPiece = this.currentPiece + 1;
+			if (move !== 'pass') {
+				var target = this.pieces[move],
+					attackedPiece = currentPiece.attack(target);
+				if (attackedPiece.isDestroyed()) {
+					if (move < this.currentPiece) {
+						nextPiece--;
+					}
+					newPieces.splice(move, 1);
+				} else {
+					newPieces[move] = attackedPiece;
 				}
-				newPieces.splice(index,1);
-			} else {
-				newPieces[index] = attackedPiece;
 			}
-			return new this.constructor(newPieces, (this.currentPiece+1) % this.pieces.length, false);
+			return new this.constructor(newPieces, nextPiece % newPieces.length, false);
 		}
 	}, 
 	
@@ -111,5 +124,21 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		} else {
 			return null;
 		}
+	},
+	
+	// ## Utilities ################################################################################
+	
+	__serialize__: function __serialize__() {
+		return [this.name, this.pieces, this.currentPiece, this.hasMoved];
+	},
+	
+	toString: function toString() {
+		var game = this;
+		return this.name +"("+ this.currentPiece +":"+ this.pieces[this.currentPiece] +" "+ 
+			(this.hasMoved ? "attacks" : "moves") +
+			this.pieces.map(function (p, i) {
+				return i === game.currentPiece ? "" : ", "+ i +":"+ p;
+			}).join("") +
+		")";
 	}
 }); // declare TacticsGame
