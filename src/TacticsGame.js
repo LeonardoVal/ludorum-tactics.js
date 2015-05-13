@@ -7,8 +7,18 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	noViewTerrains:'x#',
 	noWalkTerrains:'o#',
 
+	/** The constructor takes a list of `pieces`, the index of the `currentPiece` and if the current
+	piece has moved or not.
+	*/
+	constructor: function TacticsGame(pieces, currentPiece, hasMoved){
+		Game.call(this, pieces[currentPiece].owner);
+		this.pieces = pieces;
+		this.currentPiece = currentPiece |0;
+		this.hasMoved = !!hasMoved;
+	},
 	
-
+	// ## Terrain ##################################################################################
+	
 	terrain: new ludorum.utils.CheckerboardFromString(10, 15,
 		'...x...........'+
 		'...x.....o.....'+
@@ -21,15 +31,9 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		'....xx.........'+
 		'.........#.....'
 	),
-
-	constructor: function TacticsGame(pieces,currentPiece,hasMoved){
-		//ToDo ver que hacer cuando me llaman sin parámetros.
-		Game.call(this, pieces[currentPiece].owner);
-		this.pieces = pieces;
-		this.currentPiece = currentPiece|0;
-		this.hasMoved = !!hasMoved;
-	},
 	
+	// ## Game logic ###############################################################################
+	 
 	/**
 	Gets movements. 
 	*/
@@ -43,21 +47,19 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	},
 
 	next : function next(moves){
-		//ToDo
-		var currentPiece = this.pieces[this.currentPiece];
+		var currentPiece = this.pieces[this.currentPiece],
+			newPieces = this.pieces.concat([]);
 		raiseIf(!moves.hasOwnProperty(currentPiece.owner),
 			"Active player has no moves in ", JSON.stringify(moves), "!");
 		if (!this.hasMoved) {
 			var piece = currentPiece.clone();
 			piece.position = moves[currentPiece.owner];
-			var newPieces = this.pieces.concat([]);
 			newPieces[currentPiece] = piece;
 			return new this.constructor(newPieces, this.currentPiece, true);
 		} else {
-			var index = moves[currentPiece.owner]
+			var index = moves[currentPiece.owner];
 			var target = this.pieces[index];
 			var enemyPiece = currentPiece.attack(target);
-			var newPieces = this.pieces.concat([]);
 			if (enemyPiece.isAlive()) {
 				newPieces[index] = enemyPiece;
 			} else {
@@ -70,24 +72,19 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		}
 	}, 
 	
+	/** By default the player that loses all their pieces loses.
+	*/
 	result : function result(){
-		var game = this;
-		var hasPieces = game.players.map(function(player){
-			return game.pieces.filter(function(piece){
+		var pieceCount, player;
+		for (var i = 0; i < this.players; ++i) {
+			player = this.players[i];
+			pieceCount = game.pieces.filter(function(piece){
 				return piece.owner === player;
-			}).length > 0;
-		});
-		if (hasPieces[0] === 0){
-			return game.defeat(this.players[0]);
-		}
-		if (hasPieces[1] === 0) {
-			return game.defeat(this.players[1]);
+			}).length;
+			if (pieceCount < 1){
+				return game.defeat(player);
+			}
 		}
 		return null;
-	},
-
-	generateThreatMap: function generateThreatMap(){
-		//ToDo
 	}
-
 }); // declare TacticsGame

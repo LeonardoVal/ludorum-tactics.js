@@ -1,45 +1,38 @@
 /** # Tactics Piece
 */
 
-var TacticsPiece  = exports.TacticsPiece= declare({
-/**
-	   hp :Cantidad de unidades 
-	   hitChance 0-1
-	   saveChance 0-1
-	   attackRange 0-3
-	   movementSpeed 0-5
-	   position xxyy 
-	   
-	*/
-	constructor: function TacticsPiece(hp,hitChance,saveChance,attackRange, movement,position,owner){
-		this.position=position;
-		this.hp=hp;
-		this.damageReceived=0;
-
-		this.hitChance=hitChance;
-		this.saveChance=saveChance;
-
-		this.attackRange=attackRange;
-		this.movement=movement;
-		this.owner=owner;
+var TacticsPiece  = exports.TacticsPiece = declare({
+	
+	/** The constructor takes an object with the following data:
+	
+	+ `owner`: The player that owns (and hence controls) this piece.
+	+ `position`: Coordinate (`[row, column]`) in the board where the piece is located.
+	+ `movement=1`: Distance the piece can move. It must be between 1 and 4.
+	+ `hp`: Amount of health points.
+	+ `damage=0`: Amount of damage received.
+	+ `attackChance`: Chance of hiting a target while attacking.
+	+ `attackDamage`: Maximum amount of damage this piece's attack can do.
+	+ `attackRange`: Maximum distance upto which a target can be attacked.
+	+ `defenseChance`: Chance of saving an attack.
+	*/	
+	constructor: function TacticsPiece(props){
+		initialize(this, props)
+			.string('owner')
+			.array('position', { length: 2, elementType: base.types.INTEGER })
+			.integer('movement', { defaultValue: 1, minimum: 1, maximum: 4 })
+			.integer('hp')
+			.integer('damage', { defaultValue: 0 })
+			.number('attackChance', { ignore: true, minimum: 0, maximum: 1 })
+			.number('attackDamage', { ignore: true, minimum: 1 })
+			.number('attackRange', { ignore: true, minimum: 1, maximum: 3 })
+			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 })
 	},
 
-/**
-	Clone method
-*/
-clone: function clone(){
-	var xclone=new TacticsPiece();
-		xclone.position=this.position;
-		xclone.hp=this.hp;
-		xclone.damageReceived=this.damageReceived;
-		xclone.hitChance=this.hitChance;
-		xclone.saveChance=this.saveChance;
-		xclone.attackRange=this.attackRange;
-		xclone.movement=this.movement;
-		xclone.owner=this.owner;
-	return xclone;
-
-},
+	/** Return a copy of this piece. Useful to generate new game states.
+	*/
+	clone: function clone(){
+		return new this.constructor(this);
+	},
 
 
 /** Movement of the piece considering the terrain and other pieces that info is passed through game

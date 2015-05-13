@@ -12,6 +12,7 @@
 // Import synonyms. ////////////////////////////////////////////////////////////////////////////////
 	var declare = base.declare,
 		iterable = base.iterable,
+		initialize = base.initialize,
 		Game = ludorum.Game,
 		raiseIf = base.raiseIf;
 
