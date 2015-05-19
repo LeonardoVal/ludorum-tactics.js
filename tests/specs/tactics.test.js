@@ -72,6 +72,24 @@ define(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludoru
 			expect(p2.pieceInLineOfSight(game, p1)).toBe(true);
 			expect(p2.possibleAttacks(game).join(' ')).toBe([0].sort().join(' '));
 		}); // it "plain and clear terrain."
+
+		it("plain and clear terrain with short attackRange", function () {
+			var TestGame = declare(tactics.TacticsGame, {
+					terrain: new ludorum.utils.CheckerboardFromString(9, 9, 
+						base.Iterable.repeat('.', 9 * 9).join('') // Plain 9x9 terrain.
+					)
+				}),
+				p1 = new tactics.TacticsPiece({ owner: 'Left', position: [4,4], movement: 0, attackRange: 1 }),
+				p2 = new tactics.TacticsPiece({ owner: 'Right', position: [0,0], movement: 2, attackRange: 1 }),
+				game = new TestGame([p1, p2]);
+			game.terrain.coordinates().forEach(function (position) {
+				expect(game.isPassable(position)).toBe('0,0 4,4'.indexOf(position +'') < 0);
+				expect(game.isClear(position)).toBe(true);
+			});
+			expect(p1.moves(game).sort().join(' ')).toBe([[4,4]].join(' '));
+			expect(p1.possibleAttacks(game).join(' ')).toBe('');
+			expect(p1.pieceInLineOfSight(game, p2)).toBe(true);
+		});
 		
 		it("wall terrain.", function () {
 			var TestGame = declare(tactics.TacticsGame, {

@@ -45,11 +45,11 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 			.string('owner')
 			.array('position', { length: 2, elementType: base.types.INTEGER })
 			.number('damage', { defaultValue: 0 })
-			.integer('movement', { ignore: true, minimum: 1 })
+			.integer('movement', { ignore: true, minimum: 0 })
 			.integer('hp', { ignore: true, minimum: 1 })
 			.number('attackChance', { ignore: true, minimum: 0, maximum: 1 })
 			.number('attackDamage', { ignore: true, minimum: 1 })
-			.number('attackRange', { ignore: true, minimum: 1 })
+			.number('attackRange', { ignore: true, minimum: 0 })
 			.number('defenseChance', { ignore: true, minimum: 0, maximum: 1 });
 	},
 
