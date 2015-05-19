@@ -27,16 +27,19 @@ define(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludoru
 			expect(result).toBeTruthy();
 			expect(result.Left).toBeGreaterThan(0);
 			expect(result.Right).toBeLessThan(0);
+			expect(testGame1.moves()).toBeFalsy();
 			
 			var testGame2 = new tactics.TacticsGame([pR]),
 			result = testGame2.result();
 			expect(result).toBeTruthy();
 			expect(result.Left).toBeLessThan(0);
 			expect(result.Right).toBeGreaterThan(0);
+			expect(testGame2.moves()).toBeFalsy();
 			
 			var testGame3 = new tactics.TacticsGame([pL, pR]);
 			result = testGame3.result();
 			expect(result).toBeFalsy();
+			expect(testGame3.moves()).toBeTruthy();
 		}); // it "result calculation."
 		
 		it("plain and clear terrain.", function () {
