@@ -20,17 +20,17 @@ define(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludoru
 		}); // it "type definitions."
 		
 		it("result calculation.", function () {
-			var pL = new tactics.TacticsPiece({ owner: 'Left', position: [4,4], hp: 100 }),
-				pR = new tactics.TacticsPiece({ owner: 'Right', position: [4,4], hp: 100 }),
+			var pL = new tactics.TacticsPiece({ owner: 'Left', position: [0,1], hp: 100 }),
+				pR = new tactics.TacticsPiece({ owner: 'Right', position: [0,0], hp: 100 }),
 				testGame1 = new tactics.TacticsGame([pL]),
 				result = testGame1.result();
-			expect(result).not.toBeFalsy();
+			expect(result).toBeTruthy();
 			expect(result.Left).toBeGreaterThan(0);
 			expect(result.Right).toBeLessThan(0);
 			
 			var testGame2 = new tactics.TacticsGame([pR]),
 			result = testGame2.result();
-			expect(result).not.toBeFalsy();
+			expect(result).toBeTruthy();
 			expect(result.Left).toBeLessThan(0);
 			expect(result.Right).toBeGreaterThan(0);
 			
