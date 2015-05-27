@@ -244,7 +244,14 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	}, 
 	
 	// ## Game logic ###############################################################################
-	 
+	
+	/** Every turn there is one active piece. It must first move (or stay put) and then attack (or
+	pass the turn).
+	*/
+	activePiece: function activePiece() {
+		return this.pieces[this.currentPiece];
+	},
+	
 	/** If the current pieces has not moves, returns its possible moves. If it has moves, returns 
 	its attacks. If 
 	*/
@@ -315,6 +322,56 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 		} else {
 			return null;
 		}
+	},
+	
+	// ## User intefaces ###########################################################################
+	
+	/** The `display(ui)` method is called by a `UserInterface` to render the game state. The only 
+	supported user interface type is `BasicHTMLInterface`. See `__displayHTML__`.
+	*/
+	display: function display(ui) {
+		raiseIf(!ui || !(ui instanceof ludorum.players.UserInterface.BasicHTMLInterface), "Unsupported UI!");
+		return this.__displayHTML__(ui);
+	},
+	
+	/** The game board is rendered in HTML as a table. The look can be customized with CSS classes.
+	*/
+	__displayHTML__: function __displayHTML__(ui) {
+		var game = this,
+			activePlayer = this.activePlayer(),
+			activePiece = this.activePiece(),
+			moves = this.moves(),
+			classNames = {
+				'.': "ludorum-terrain-open", '#': "ludorum-terrain-obstacle",
+				'x': "ludorum-terrain-fog", 'o': "ludorum-terrain-hole"
+			};
+		moves = moves && iterable(moves[activePlayer]).map(function (m) {
+			if (game.hasMoved) {
+				return [(m !== "pass" ? game.pieces[m].position : activePiece.position) +'', m];
+			} else {
+				return [m +'', m];
+			}
+		}).toObject();
+		this.terrain.renderAsHTMLTable(ui.document, ui.container, function (data) {
+			var coord = data.coord + '',
+				piece = game.__piecesByPosition__[coord];
+			if (moves && moves.hasOwnProperty(coord)) {
+				data.className = 'ludorum-move-'+ activePlayer;
+				data.onclick = ui.perform.bind(ui, moves[coord], activePlayer);
+			} else {
+				data.className = classNames[data.square];
+			}
+			if (piece) {
+				data.className += ' ludorum-square-'+ piece.owner;
+				data.innerHTML = piece.name.charAt(0);
+				if (piece === activePiece) {
+					data.className += ' ludorum-active-piece'; 
+				}
+			} else {
+				data.innerHTML = '&nbsp;';
+			}
+		});
+		return ui;
 	},
 	
 	// ## Utilities ################################################################################

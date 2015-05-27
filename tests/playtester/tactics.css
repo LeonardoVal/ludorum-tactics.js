@@ -1,0 +1,100 @@
+﻿/* CSS for the user interface to playtest the Bahab implementation. 
+*/
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+header {
+	margin-bottom: 1em;
+	text-align: center;
+}
+footer {
+	clear: both;
+	margin-top: 1em;
+	text-align: center;
+	font-size: large;
+}
+
+#container {
+	margin: auto;
+	width: 40em;
+}
+
+#board {
+	float: left;
+}
+
+#controls {
+	float: left;
+	text-align: center;
+	margin-left: 2em;
+	font-size: large;
+}
+#controls button {
+	border: 2px solid black;
+	border-radius: 2px;
+	font-size: large;
+}
+#controls select {
+	border: none;
+	text-align: center;
+	font-size: large;
+}
+#controls button {
+	background-color: white;
+	color: black;
+}
+#controls button:hover {
+	background-color: black;
+	color: white;
+}
+
+/* Game board *****************************************************************/
+#board table {
+	border-collapse: collapse;
+	width: 15em;
+	height: 15em;
+	/*margin: auto;*/
+/*BEGIN user-select: none */
+	-webkit-touch-callout: none;
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+/*END user-select: none */
+}
+#board table td {
+	border: 1px solid black;
+	font-size: 2em;
+	font-family: monospace;
+	width: 1em;
+	height: 1em;
+	text-align: center;
+}
+#board table .ludorum-terrain-open {
+	background-color: rgb(90,220,60);
+}
+#board table .ludorum-terrain-obstacle {
+	background-color: rgb(220,150,80);
+}
+#board table .ludorum-terrain-hole {
+	background-color: rgb(50,160,250);
+}
+#board table .ludorum-terrain-fog {
+	background-color: rgb(150,150,150);
+}
+#board table .ludorum-move-Left {
+	background-color: rgb(220,60,60);
+}
+#board table .ludorum-move-Right {
+	background-color: rgb(60,60,220);
+}
+#board table .ludorum-square-Left {
+	color: rgb(220,0,0);
+}
+#board table .ludorum-square-Right {
+	color: rgb(0,0,220);
+}
+#board table .ludorum-active-piece {
+	font-weight: bold;
+}
