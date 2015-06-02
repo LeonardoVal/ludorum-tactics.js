@@ -23,10 +23,10 @@ require(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludor
 		}, runOnWorker: false },
 		{title: "Random", builder: function () { 
 			return new ludorum.players.RandomPlayer();
-		}, runOnWorker: false }/*,
-		{title: "MonteCarlo (50 sims)", builder: function () {
-			return new ludorum.players.MonteCarloPlayer({ simulationCount: 50 });
-		}, runOnWorker: true }*/
+		}, runOnWorker: false },
+		{title: "MonteCarlo (10 sims)", builder: function () {
+			return new ludorum.players.MonteCarloPlayer({ simulationCount: 10 });
+		}, runOnWorker: false }
 	];
 	APP.players = [PLAYER_OPTIONS[0].builder(), PLAYER_OPTIONS[0].builder()];
 	PLAYER_OPTIONS.forEach(function (option, i) {
@@ -36,7 +36,7 @@ require(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludor
 	});
 	APP.elements.selectLeft.onchange = 
 	APP.elements.selectRight.onchange = function () {
-		var i = this === APP.elements.selectUppercase ? 0 : 1,
+		var i = this === APP.elements.selectLeft ? 0 : 1,
 			option = PLAYER_OPTIONS[+this.value];
 		(option.runOnWorker
 			? ludorum.players.WebWorkerPlayer.create({ playerBuilder: option.builder })
@@ -64,7 +64,7 @@ require(['creatartis-base', 'ludorum', 'ludorum-tactics'], function (base, ludor
 			APP.elements.footer.innerHTML = base.Text.escapeXML(results['Left'] === 0 ? 'Drawed game.'
 				: (results['Left'] > 0 ? 'Left' : 'Right') +' wins.');
 		});
-		match.run();
+		match.run(200);
 	};
 	
 // Start.
