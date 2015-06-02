@@ -154,6 +154,26 @@ var TacticsPiece  = exports.TacticsPiece = declare({
 		return piece;
 	},
 	
+	// ## Utilities ################################################################################
+	
+	__serialize__: function __serialize__() {
+		return { name: this.name,
+			owner: this.owner,
+			position: this.position,
+			damage: this.damage,
+			movement: this.movement,
+			hp: this.hp,
+			attackChance: this.attackChance,
+			attackDamage: this.attackDamage,
+			attackRange: this.attackRange,
+			defenseChance: this.defenseChance
+		};
+	},
+	
+	"static fromJSON": function fromJSON(data) {
+		return new TacticsPiece(data);
+	},
+	
 	toString: function toString() {
 		return this.name +"("+ 
 			this.owner +"@"+ this.position +" "+ (this.hp - this.damage) +"/"+ this.hp +

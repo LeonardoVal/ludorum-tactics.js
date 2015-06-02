@@ -1,7 +1,7 @@
 ﻿/** # Tactics game
 
 */
-var TacticsGame = exports.TacticsGame = declare(Game, {
+var TacticsGame = exports.TacticsGame = ludorum.games.TacticsGame = declare(Game, {
 	name: 'TacticsGame',
 	players: ['Left', 'Right'],
 
@@ -186,7 +186,25 @@ var TacticsGame = exports.TacticsGame = declare(Game, {
 	// ## Utilities ################################################################################
 	
 	__serialize__: function __serialize__() {
-		return [this.name, this.pieces, this.currentPiece, this.hasMoved];
+		return [this.name, 
+			this.currentPiece, 
+			this.hasMoved, 
+			this.pieces.map(function (p) {
+				return p.__serialize__;
+			}), 
+			[this.terrain.height, this.terrain.width, this.terrain.string]
+		];
+	},
+	
+	"static fromJSON": function fromJSON(data) {
+		var pieces = data[3].map(function (p) {
+				return TacticsPiece.fromJSON(p);
+			}),
+			GameClass = declare(this, {
+				name: data[0],
+				terrain: new ludorum.utils.CheckerboardFromString(data[4][0], data[4][1], data[4][2])
+			});
+		return new GameClass(pieces, data[1], data[2]);
 	},
 	
 	toString: function toString() {
